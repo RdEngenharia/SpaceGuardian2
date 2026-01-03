@@ -4,36 +4,24 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>Space Guardian - Deluxe Edition</title>
-    
     <meta name="theme-color" content="#000000" />
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-      body {
-        margin: 0;
-        background: #000;
-        color: white;
-        font-family: 'Courier New', Courier, monospace;
-        overflow: hidden;
-        touch-action: none;
-      }
+      body { margin: 0; background: #000; color: white; font-family: 'Courier New', Courier, monospace; overflow: hidden; touch-action: none; }
     </style>
-
-    <script type="module" src="/index.tsx"></script>
+    <script type="module" src="./index.tsx"></script>
   </head>
   <body class="bg-black text-white overflow-hidden">
     <div id="root"></div>
-    
     <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-          // No GitHub Pages com a configuração 'base' no vite.config, 
-          // o sw.js é servido na raiz do projeto.
+          // Registro simplificado que utiliza a 'base' definida no vite.config.ts
           navigator.serviceWorker.register('./sw.js')
             .then(reg => console.log('SW OK:', reg.scope))
-            .catch(err => console.log('Erro ao registrar SW:', err));
+            .catch(err => console.log('Erro SW:', err));
         });
       }
     </script>
