@@ -4,9 +4,11 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, '.', '');
+    
     return {
-      // Adicione esta linha abaixo para funcionar no GitHub Pages:
-      base: './', 
+      // Ajuste crucial para GitHub Pages: usa o nome do repositório
+      base: '/SpaceGuardian2/', 
+      
       server: {
         port: 3000,
         host: '0.0.0.0',
@@ -18,7 +20,8 @@ export default defineConfig(({ mode }) => {
       },
       resolve: {
         alias: {
-          '@': path.resolve(__dirname, '.'),
+          // Ajustado para apontar para a raiz do projeto conforme sua estrutura
+          '@': path.resolve(__dirname, './'),
         }
       }
     };
