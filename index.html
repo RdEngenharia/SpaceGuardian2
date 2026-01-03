@@ -6,7 +6,7 @@
     <title>Space Guardian - Deluxe Edition</title>
     
     <meta name="theme-color" content="#000000" />
-    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     
     <script src="https://cdn.tailwindcss.com"></script>
@@ -28,14 +28,17 @@
     <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-          // Detecta automaticamente se estamos no GitHub Pages ou local
-          const swPath = window.location.pathname.includes('SpaceGuardian2') 
-            ? '/SpaceGuardian2/sw.js' 
-            : './sw.js';
-
-          navigator.serviceWorker.register(swPath)
+          // No GitHub Pages, o arquivo sw.js fica em /SpaceGuardian2/sw.js
+          // Usar o caminho relativo './sw.js' sem a barra inicial é o mais seguro
+          navigator.serviceWorker.register('./sw.js')
             .then(reg => console.log('SW OK:', reg.scope))
-            .catch(err => console.log('SW Erro:', err));
+            .catch(err => {
+              console.log('Tentando registro alternativo...');
+              // Caso o primeiro falhe, tenta o caminho absoluto do repositório
+              navigator.serviceWorker.register('/SpaceGuardian2/sw.js')
+                .then(r => console.log('SW OK (Alt):', r.scope))
+                .catch(e => console.log('SW Erro Crítico:', e));
+            });
         });
       }
     </script>
