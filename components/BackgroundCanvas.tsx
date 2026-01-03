@@ -1,98 +1,84 @@
 
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, useMemo } from 'react';
 import assetService, { BACKGROUND_COUNT } from '../services/assetService';
 
 interface BackgroundCanvasProps {
   backgroundIndex: number;
 }
 
-const FADE_DURATION = 2000; // Duração da transição em milissegundos (2 segundos)
-
 const BackgroundCanvas: React.FC<BackgroundCanvasProps> = ({ backgroundIndex }) => {
+  const [visibleImageIndex, setVisibleImageIndex] = useState(0);
+  const [isFading, setIsFading] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [currentImage, setCurrentImage] = useState<HTMLImageElement | null>(null);
-  const [nextImage, setNextImage] = useState<HTMLImageElement | null>(null);
-  const fadeAnimation = useRef<{ startTime: number, id: number } | null>(null);
-  
-  // Efeito para inicializar a primeira imagem de fundo.
-  useEffect(() => {
-    if (assetService.isLoaded()) {
-      const initialBgName = `background1`;
-      setCurrentImage(assetService.assets[initialBgName]);
-    }
-  }, []);
 
-  // Efeito para lidar com a mudança de imagem de fundo.
-  useEffect(() => {
-    if (!assetService.isLoaded() || !currentImage) return;
+  // Memoiza a lista de imagens de fundo para evitar recálculos
+  const backgroundImages = useMemo(() => {
+    if (!assetService.isLoaded()) return [];
+    return Array.from({ length: BACKGROUND_COUNT }, (_, i) => 
+      assetService.assets[`background${i + 1}`]
+    );
+  }, [assetService.isLoaded()]);
 
-    // Calcula o nome do próximo asset, fazendo um loop se o índice for maior que o número de fundos.
-    const nextBgName = `background${(backgroundIndex % BACKGROUND_COUNT) + 1}`;
-    const newNextImage = assetService.assets[nextBgName];
-
-    // Só inicia a transição se a nova imagem for diferente da atual.
-    if (newNextImage && newNextImage.src !== currentImage.src) {
-      setNextImage(newNextImage);
-      // Cancela qualquer animação de fade anterior.
-      if (fadeAnimation.current) {
-        cancelAnimationFrame(fadeAnimation.current.id);
-      }
-      // Inicia a nova animação de fade.
-      fadeAnimation.current = { startTime: performance.now(), id: requestAnimationFrame(animateFade) };
-    }
-  }, [backgroundIndex, currentImage]);
-
-  const animateFade = (timestamp: number) => {
-    const canvas = canvasRef.current;
-    const ctx = canvas?.getContext('2d');
-    if (!ctx || !canvas || !currentImage || !nextImage || !fadeAnimation.current) return;
-
-    const elapsedTime = timestamp - fadeAnimation.current.startTime;
-    const progress = Math.min(elapsedTime / FADE_DURATION, 1);
-    
-    // Desenha as imagens
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.globalAlpha = 1;
-    ctx.drawImage(currentImage, 0, 0, canvas.width, canvas.height);
-    
-    if (progress > 0) {
-        ctx.globalAlpha = progress;
-        ctx.drawImage(nextImage, 0, 0, canvas.width, canvas.height);
-    }
-
-    if (progress < 1) {
-      // Continua a animação.
-      fadeAnimation.current.id = requestAnimationFrame(animateFade);
-    } else {
-      // Fim da animação. A nova imagem se torna a atual.
-      setCurrentImage(nextImage);
-      setNextImage(null);
-      fadeAnimation.current = null;
-      ctx.globalAlpha = 1;
-      ctx.drawImage(nextImage, 0, 0, canvas.width, canvas.height); // Garante o desenho final
-    }
-  };
-
-  // Efeito para redimensionar o canvas e redesenhar a imagem atual.
+  // Efeito para redimensionar o canvas e redesenhar a imagem atual
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    if (!canvas || backgroundImages.length === 0) return;
 
     const resizeAndDraw = () => {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
       const ctx = canvas.getContext('2d');
-      if (ctx && currentImage && !fadeAnimation.current) {
-        ctx.drawImage(currentImage, 0, 0, canvas.width, canvas.height);
+      if (ctx) {
+        // Garante que a imagem visível seja desenhada corretamente
+        const imageToDraw = backgroundImages[visibleImageIndex % BACKGROUND_COUNT];
+        if (imageToDraw) {
+            ctx.drawImage(imageToDraw, 0, 0, canvas.width, canvas.height);
+        }
       }
     };
     
     resizeAndDraw();
     window.addEventListener('resize', resizeAndDraw);
     return () => window.removeEventListener('resize', resizeAndDraw);
-  }, [currentImage]);
+  }, [visibleImageIndex, backgroundImages]);
 
-  return <canvas ref={canvasRef} className="absolute top-0 left-0 w-full h-full z-0" />;
+  // Efeito para gerenciar a transição de fade
+  useEffect(() => {
+    if (backgroundImages.length === 0) return;
+
+    const targetIndex = backgroundIndex % BACKGROUND_COUNT;
+    
+    if (targetIndex !== visibleImageIndex) {
+      setIsFading(true);
+      
+      const fadeTimeout = setTimeout(() => {
+        setVisibleImageIndex(targetIndex);
+        setIsFading(false);
+      }, 500); // Metade da duração da transição CSS
+
+      return () => clearTimeout(fadeTimeout);
+    }
+  }, [backgroundIndex, visibleImageIndex, backgroundImages]);
+
+  if (backgroundImages.length === 0) {
+    return null; // Não renderiza nada até que os assets sejam carregados
+  }
+  
+  const prevImageIndex = visibleImageIndex;
+  const nextImageIndex = backgroundIndex % BACKGROUND_COUNT;
+
+  return (
+    <div className="absolute top-0 left-0 w-full h-full z-0">
+      <canvas ref={canvasRef} className="absolute top-0 left-0 w-full h-full" />
+      <div 
+        className="absolute top-0 left-0 w-full h-full bg-cover bg-center transition-opacity duration-1000"
+        style={{ 
+          backgroundImage: `url(${backgroundImages[nextImageIndex]?.src})`,
+          opacity: isFading ? 1 : 0,
+        }}
+      />
+    </div>
+  );
 };
 
 export default BackgroundCanvas;
