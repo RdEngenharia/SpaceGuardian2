@@ -1,4 +1,3 @@
-
 // Este serviço é responsável por carregar todas as imagens do jogo
 // antes que a jogabilidade comece. Ele inclui um sistema de fallback
 // para gerar imagens de placeholder caso os arquivos de imagem reais
@@ -45,7 +44,6 @@ const placeholderManifest: Record<string, string> = {
     enemyBesouro: generatePlaceholder(70, 70, (ctx, w, h) => {
         ctx.fillStyle = '#f90'; ctx.beginPath(); ctx.arc(w/2, h/2, w/2, 0, Math.PI*2); ctx.fill();
     }),
-    // Placeholders para os novos fundos
     background1: generatePlaceholder(10, 10, (ctx, w, h) => {
         const grad = ctx.createLinearGradient(0, 0, 0, h);
         grad.addColorStop(0, '#000'); grad.addColorStop(1, '#020A1F'); ctx.fillStyle = grad; ctx.fillRect(0,0,w,h);
@@ -66,21 +64,21 @@ const placeholderManifest: Record<string, string> = {
 
 // --- FIM: SISTEMA DE PLACEHOLDERS ---
 
+// CORREÇÃO AQUI: Removemos a barra '/' inicial para usar caminhos relativos
 const assetManifest = {
-  playerShip1: '/assets/images/player_ship_1.png',
-  playerShip2: '/assets/images/player_ship_2.png',
-  playerShip3: '/assets/images/player_ship_3.png',
-  shield: '/assets/images/shield.png',
-  meteor: '/assets/images/meteor.png',
-  meteorBig: '/assets/images/meteor_big.png',
-  enemyZangano: '/assets/images/enemy_zangano.png',
-  enemyVespa: '/assets/images/enemy_vespa.png',
-  enemyBesouro: '/assets/images/enemy_besouro.png',
-  // Novos fundos
-  background1: '/assets/images/background_1.png',
-  background2: '/assets/images/background_2.png',
-  background3: '/assets/images/background_3.png',
-  background4: '/assets/images/background_4.png',
+  playerShip1: 'assets/images/player_ship_1.png',
+  playerShip2: 'assets/images/player_ship_2.png',
+  playerShip3: 'assets/images/player_ship_3.png',
+  shield: 'assets/images/shield.png',
+  meteor: 'assets/images/meteor.png',
+  meteorBig: 'assets/images/meteor_big.png',
+  enemyZangano: 'assets/images/enemy_zangano.png',
+  enemyVespa: 'assets/images/enemy_vespa.png',
+  enemyBesouro: 'assets/images/enemy_besouro.png',
+  background1: 'assets/images/background_1.png',
+  background2: 'assets/images/background_2.png',
+  background3: 'assets/images/background_3.png',
+  background4: 'assets/images/background_4.png',
 };
 
 const assets: Record<string, HTMLImageElement> = {};
@@ -120,7 +118,6 @@ const loadAssets = async (): Promise<void> => {
   console.log('Asset loading process finished.');
 };
 
-// Exporta a contagem de fundos para uso no App.tsx
 export const BACKGROUND_COUNT = 4;
 
 const assetService = {
