@@ -1,4 +1,4 @@
-
+import './index.css';
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import GameCanvas from './components/GameCanvas';
 import BackgroundCanvas from './components/BackgroundCanvas'; // Novo componente
