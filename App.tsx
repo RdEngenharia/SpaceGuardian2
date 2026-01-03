@@ -1,4 +1,4 @@
-import './index.css';
+
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import GameCanvas from './components/GameCanvas';
 import BackgroundCanvas from './components/BackgroundCanvas'; // Novo componente
@@ -155,9 +155,11 @@ export default function App() {
           if (type === 'guardianAngel') newUpgrades.guardianAngel = true;
           return newUpgrades;
         });
-        alert("Melhoria adquirida!");
+        handleVictory("Melhoria adquirida!");
+        // Retorna ao menu anterior após um breve delay para o jogador ver a mensagem
+        setTimeout(handleBackToMenu, 800);
     } else {
-        alert("Moedas insuficientes!");
+        handleAlert("Moedas insuficientes!");
     }
   };
 
