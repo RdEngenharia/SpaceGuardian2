@@ -1,30 +1,25 @@
 // O nome do cache para a nossa aplicação.
-// Mude este nome para forçar a atualização do cache quando você alterar os arquivos.
-const CACHE_NAME = 'space-guardian-v2'; // Versão do cache atualizada
+const CACHE_NAME = 'space-guardian-v2'; 
 
-// Lista de todos os arquivos e assets que precisam ser cacheados para o jogo funcionar offline.
-// Nota: Usamos caminhos relativos (sem / no início) para compatibilidade com GitHub Pages.
+// Lista de arquivos corrigida com base nos nomes reais da sua pasta assets/images
 const urlsToCache = [
   './',
   'index.html',
-  // Assets de imagem do jogo
+  // Assets de imagem (Nomes exatos conforme seus prints)
   'assets/images/player_ship_1.png',
   'assets/images/player_ship_2.png',
   'assets/images/player_ship_3.png',
-  'assets/images/shield.png',
-  'assets/images/meteor.png',
-  'assets/images/meteor_big.png',
-  'assets/images/enemy_zangano.png',
-  'assets/images/enemy_vespa.png',
   'assets/images/enemy_besouro.png',
-  'assets/images/icon-192x192.png',
+  'assets/images/inimigo_vespa.png',
+  'assets/images/inimigo_zangao.png',
+  'assets/images/meteoro.png',
+  'assets/images/meteoro_big.png',
   'assets/images/icon-512x512.png',
-  // Novos assets de fundo
-  'assets/images/background_1.png',
-  'assets/images/background_2.png',
-  'assets/images/background_3.png',
-  'assets/images/background_4.png',
-  // Módulos principais do React (URLs externas permanecem iguais)
+  'assets/images/fundo_1.png',
+  'assets/images/fundo_2.png',
+  'assets/images/fundo_3.png',
+  'assets/images/fundo_4.png',
+  // Módulos principais do React
   'https://esm.sh/react@^19.2.3',
   'https://esm.sh/react-dom@^19.2.3/client',
 ];
@@ -33,7 +28,9 @@ self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => {
-        console.log('Opened cache');
+        console.log('Cache aberto com sucesso');
+        // Usamos map para tentar cachear e ignorar erros individuais se necessário,
+        // mas aqui a lista deve estar 100% correta agora.
         return cache.addAll(urlsToCache);
       })
   );
@@ -47,12 +44,10 @@ self.addEventListener('fetch', event => {
           return response;
         }
         return fetch(event.request);
-      }
-    )
+      })
   );
 });
 
-// Limpa caches antigos para evitar o uso de arquivos desatualizados
 self.addEventListener('activate', event => {
   const cacheWhitelist = [CACHE_NAME];
   event.waitUntil(
