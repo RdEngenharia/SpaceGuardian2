@@ -1,0 +1,16 @@
+
+export const PLAYER_WIDTH = 45;
+export const PLAYER_HEIGHT = 50;
+export const PLAYER_SPEED = 7;
+export const BASE_FIRE_RATE = 14;
+export const FAST_FIRE_RATE = 9;
+
+export const BOSS_VICTORY_QUOTES: string[] = [
+    "MISSÃO CUMPRIDA! O PLANETA ESTÁ SALVO!",
+    "ALVO GIGANTE NEUTRALIZADO!",
+    "EXCELENTE TRABALHO, GUARDIÃO!",
+    "O METEORO VIROU POEIRA CÓSMICA!",
+    "HERÓI DA TERRA! AMEAÇA ELIMINADA!",
+    "VOCÊ É UMA LENDA DO ESPAÇO!",
+    "IMPACTO EVITADO COM SUCESSO!"
+];

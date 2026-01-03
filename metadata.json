@@ -1,0 +1,5 @@
+{
+  "name": "SpaceGuardian",
+  "description": "A modern React and TypeScript version of the classic space shooter game, rebuilt for performance and scalability. Defend the planet from incoming meteor showers and epic bosses.",
+  "requestFramePermissions": []
+}
