@@ -1,8 +1,10 @@
-// Alteramos para v13 para garantir que o navegador limpe o cache antigo e carregue as novas rotas.
-const CACHE_NAME = 'space-guardian-v13'; 
+// Atualizamos para v14 para forçar o descarte de qualquer cache "com barra /" anterior.
+const CACHE_NAME = 'space-guardian-v14'; 
 
-// Lista de arquivos com caminhos relativos sem './' ou '/' inicial para máxima compatibilidade.
+// Lista de arquivos com caminhos RELATIVOS (sem a barra / no início)
+// Isso é essencial para o GitHub Pages localizar a pasta /SpaceGuardian2/
 const urlsToCache = [
+  './', // Raiz do projeto
   'index.html',
   'assets/images/player_ship_1.png',
   'assets/images/player_ship_2.png',
@@ -16,29 +18,28 @@ const urlsToCache = [
   'assets/images/background_1.png',
   'assets/images/background_2.png',
   'assets/images/background_3.png',
-  'assets/images/background_4.png'
+  'assets/images/background_4.png',
+  // Adicionamos o favicon aqui também
+  'favicon.ico'
 ];
 
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => {
-        console.log('Cache v13 instalado');
-        // Usamos cache.add em vez de addAll para evitar que um erro 404 em um arquivo (como o shield) 
-        // impeça todos os outros de serem cacheados.
-        urlsToCache.forEach(url => {
-          cache.add(url).catch(err => console.warn(`Falha ao cachear: ${url}`, err));
+        console.log('Instalando Cache v14...');
+        // Usamos um loop de Promises para que, se uma imagem faltar (ex: shield),
+        // o restante dos arquivos (como o fundo) ainda seja salvo no cache.
+        const cachePromises = urlsToCache.map(url => {
+          return cache.add(url).catch(err => {
+            console.warn(`Aviso: Não foi possível cachear ${url}. Verifique se o arquivo existe na pasta public/`);
+          });
         });
-        return Promise.resolve();
+        return Promise.all(cachePromises);
       })
   );
-});
-
-self.addEventListener('fetch', event => {
-  event.respondWith(
-    caches.match(event.request)
-      .then(response => response || fetch(event.request))
-  );
+  // Força o Service Worker recém-instalado a se tornar ativo imediatamente
+  self.skipWaiting();
 });
 
 self.addEventListener('activate', event => {
@@ -47,11 +48,21 @@ self.addEventListener('activate', event => {
       return Promise.all(
         cacheNames.map(cacheName => {
           if (cacheName !== CACHE_NAME) {
-            console.log('Limpando cache antigo:', cacheName);
+            console.log('Removendo cache antigo:', cacheName);
             return caches.delete(cacheName);
           }
         })
       );
-    })
+    }).then(() => self.clients.claim()) // Garante que o SW controle a página imediatamente
+  );
+});
+
+self.addEventListener('fetch', event => {
+  event.respondWith(
+    caches.match(event.request)
+      .then(response => {
+        // Se estiver no cache, retorna. Se não, busca na rede.
+        return response || fetch(event.request);
+      })
   );
 });

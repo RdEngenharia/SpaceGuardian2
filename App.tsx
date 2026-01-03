@@ -1,7 +1,6 @@
-
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import GameCanvas from './components/GameCanvas';
-import BackgroundCanvas from './components/BackgroundCanvas'; // Novo componente
+import BackgroundCanvas from './components/BackgroundCanvas';
 import IntroScreen from './components/IntroScreen';
 import StartScreen from './components/StartScreen';
 import ShopScreen from './components/ShopScreen';
@@ -30,7 +29,7 @@ export default function App() {
   const [finalStats, setFinalStats] = useState({ score: 0, msg: '' });
   const [hasFreezeCharge, setHasFreezeCharge] = useState(false);
   const [bossState, setBossState] = useState<{ current: number; max: number } | null>(null);
-  const [backgroundIndex, setBackgroundIndex] = useState(0); // Novo estado para o fundo
+  const [backgroundIndex, setBackgroundIndex] = useState(0);
   
   const [totalCoins, setTotalCoins] = useLocalStorage('sg_coins_save', 0);
   const [shopUpgrades, setShopUpgrades] = useLocalStorage<ShopUpgrades>('sg_upgrades_save', { 
@@ -41,10 +40,16 @@ export default function App() {
   const [alertMessage, setAlertMessage] = useState('');
   const preShopGameState = useRef<GameState>(GameState.Start);
 
+  // Carregamento de Assets com tratamento de erro para evitar travamentos
   useEffect(() => {
-    assetService.loadAssets().then(() => {
-      setIsLoading(false);
-    });
+    assetService.loadAssets()
+      .then(() => {
+        setIsLoading(false);
+      })
+      .catch((err) => {
+        console.error("Erro ao carregar assets, iniciando com placeholders:", err);
+        setIsLoading(false); // Inicia mesmo se houver erro
+      });
   }, []);
 
   const handleStartGame = () => {
@@ -57,7 +62,7 @@ export default function App() {
     });
     setHasFreezeCharge(false);
     setBossState(null);
-    setBackgroundIndex(0); // Reseta o fundo ao iniciar novo jogo
+    setBackgroundIndex(0);
     setGameState(GameState.Playing);
   };
 
@@ -90,10 +95,12 @@ export default function App() {
   const handleStatsUpdate = useCallback((newStats: Partial<GameStats>) => {
     setGameStats(prev => {
       const updatedStats = { ...prev, ...newStats };
-      // Lógica para mudar o fundo a cada 3 níveis
+      
+      // Lógica de troca de fundo (a cada 3 níveis)
       if (newStats.level && newStats.level !== prev.level) {
         const newIndex = Math.floor((newStats.level - 1) / 3);
-        setBackgroundIndex(newIndex);
+        // Garante que não ultrapasse o número de fundos disponíveis
+        setBackgroundIndex(newIndex % 4); 
       }
       return updatedStats;
     });
@@ -155,14 +162,16 @@ export default function App() {
           if (type === 'guardianAngel') newUpgrades.guardianAngel = true;
           return newUpgrades;
         });
+
         handleVictory("Melhoria adquirida!");
-        // Retorna ao menu anterior após um breve delay para o jogador ver a mensagem
+        // Retorno automático para a tela anterior
         setTimeout(handleBackToMenu, 800);
     } else {
         handleAlert("Moedas insuficientes!");
     }
   };
 
+  // Atalhos de teclado
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if(gameState !== GameState.Playing && gameState !== GameState.Paused) return;
@@ -186,24 +195,29 @@ export default function App() {
 
   return (
     <div className="w-screen h-screen bg-black overflow-hidden relative">
+      {/* Camada de fundo dinâmica */}
       <BackgroundCanvas backgroundIndex={backgroundIndex} />
 
-      {isGameActive && <GameCanvas 
-        isPaused={isPaused} 
-        onStatsUpdate={handleStatsUpdate}
-        onGameOver={handleGameOver}
-        onFreezeCharge={handleFreezeCharge}
-        onVictory={handleVictory}
-        onAlert={handleAlert}
-        onBossUpdate={handleBossUpdate}
-        shopUpgrades={shopUpgrades}
-        initialShield={gameStats.shield}
-        key={gameState}
-      />}
+      {isGameActive && (
+        <GameCanvas 
+          isPaused={isPaused} 
+          onStatsUpdate={handleStatsUpdate}
+          onGameOver={handleGameOver}
+          onFreezeCharge={handleFreezeCharge}
+          onVictory={handleVictory}
+          onAlert={handleAlert}
+          onBossUpdate={handleBossUpdate}
+          shopUpgrades={shopUpgrades}
+          initialShield={gameStats.shield}
+          key={gameState} 
+        />
+      )}
 
       {isGameActive && <UI stats={gameStats} onPause={handlePause} />}
-      {/* FIX: Corrected typo from isGameactive to isGameActive */}
-      {isGameActive && bossState && <BossHPBar current={bossState.current} max={bossState.max} />}
+      
+      {isGameActive && bossState && (
+        <BossHPBar current={bossState.current} max={bossState.max} />
+      )}
       
       {isGameActive && hasFreezeCharge && (
         <button 
@@ -218,13 +232,46 @@ export default function App() {
         </button>
       )}
 
-      {gameState === GameState.Intro && <IntroScreen onClose={() => setGameState(GameState.Start)} />}
-      {gameState === GameState.Start && <StartScreen onStart={handleStartGame} onShop={handleGoToShop} onHelp={() => setGameState(GameState.Help)} isLoading={isLoading} />}
-      {gameState === GameState.Shop && <ShopScreen onBack={handleBackToMenu} onBuy={handleBuyUpgrade} coins={totalCoins + gameStats.sessionCoins} upgrades={shopUpgrades} />}
-      {gameState === GameState.Help && <HelpScreen onBack={() => setGameState(GameState.Start)} />}
-      {gameState === GameState.Paused && <PauseScreen onResume={handlePause} onShop={handleGoToShop} onExit={handleReturnToStart} />}
-      {gameState === GameState.GameOver && <GameOverScreen stats={finalStats} onRestart={handleReturnToStart} />}
+      {/* Telas de Estado */}
+      {gameState === GameState.Intro && (
+        <IntroScreen onClose={() => setGameState(GameState.Start)} />
+      )}
+      
+      {gameState === GameState.Start && (
+        <StartScreen 
+          onStart={handleStartGame} 
+          onShop={handleGoToShop} 
+          onHelp={() => setGameState(GameState.Help)} 
+          isLoading={isLoading} 
+        />
+      )}
+      
+      {gameState === GameState.Shop && (
+        <ShopScreen 
+          onBack={handleBackToMenu} 
+          onBuy={handleBuyUpgrade} 
+          coins={totalCoins + gameStats.sessionCoins} 
+          upgrades={shopUpgrades} 
+        />
+      )}
+      
+      {gameState === GameState.Help && (
+        <HelpScreen onBack={() => setGameState(GameState.Start)} />
+      )}
+      
+      {gameState === GameState.Paused && (
+        <PauseScreen 
+          onResume={handlePause} 
+          onShop={handleGoToShop} 
+          onExit={handleReturnToStart} 
+        />
+      )}
+      
+      {gameState === GameState.GameOver && (
+        <GameOverScreen stats={finalStats} onRestart={handleReturnToStart} />
+      )}
 
+      {/* Popups Globais */}
       {victoryMessage && <MessagePopup message={victoryMessage} />}
       {alertMessage && <MessagePopup message={alertMessage} />}
     </div>
