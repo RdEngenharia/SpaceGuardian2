@@ -21,24 +21,19 @@
       }
     </style>
 
-    <script type="module" src="./App.tsx"></script>
+    <script type="module" src="/index.tsx"></script>
   </head>
   <body class="bg-black text-white overflow-hidden">
     <div id="root"></div>
+    
     <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-          // No GitHub Pages, o arquivo sw.js fica em /SpaceGuardian2/sw.js
-          // Usar o caminho relativo './sw.js' sem a barra inicial é o mais seguro
+          // No GitHub Pages com a configuração 'base' no vite.config, 
+          // o sw.js é servido na raiz do projeto.
           navigator.serviceWorker.register('./sw.js')
             .then(reg => console.log('SW OK:', reg.scope))
-            .catch(err => {
-              console.log('Tentando registro alternativo...');
-              // Caso o primeiro falhe, tenta o caminho absoluto do repositório
-              navigator.serviceWorker.register('/SpaceGuardian2/sw.js')
-                .then(r => console.log('SW OK (Alt):', r.scope))
-                .catch(e => console.log('SW Erro Crítico:', e));
-            });
+            .catch(err => console.log('Erro ao registrar SW:', err));
         });
       }
     </script>
