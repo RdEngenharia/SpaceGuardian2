@@ -14,7 +14,7 @@ const urlsToCache = [
   'assets/images/inimigo_zangao.png',
   'assets/images/meteoro.png',
   'assets/images/meteoro_big.png',
-  'assets/images/icon-512x512.png',
+  'assets/images/icon-512.png',
   'assets/images/fundo_1.png',
   'assets/images/fundo_2.png',
   'assets/images/fundo_3.png',
