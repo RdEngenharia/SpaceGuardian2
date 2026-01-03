@@ -64,21 +64,21 @@ const placeholderManifest: Record<string, string> = {
 
 // --- FIM: SISTEMA DE PLACEHOLDERS ---
 
-// CORREÇÃO AQUI: Removemos a barra '/' inicial para usar caminhos relativos
+// CORREÇÃO: Usamos './' para garantir que o GitHub Pages procure na pasta correta do projeto
 const assetManifest = {
-  playerShip1: 'assets/images/player_ship_1.png',
-  playerShip2: 'assets/images/player_ship_2.png',
-  playerShip3: 'assets/images/player_ship_3.png',
-  shield: 'assets/images/shield.png',
-  meteor: 'assets/images/meteor.png',
-  meteorBig: 'assets/images/meteor_big.png',
-  enemyZangano: 'assets/images/enemy_zangano.png',
-  enemyVespa: 'assets/images/enemy_vespa.png',
-  enemyBesouro: 'assets/images/enemy_besouro.png',
-  background1: 'assets/images/background_1.png',
-  background2: 'assets/images/background_2.png',
-  background3: 'assets/images/background_3.png',
-  background4: 'assets/images/background_4.png',
+  playerShip1: './assets/images/player_ship_1.png',
+  playerShip2: './assets/images/player_ship_2.png',
+  playerShip3: './assets/images/player_ship_3.png',
+  shield: './assets/images/shield.png',
+  meteor: './assets/images/meteor.png',
+  meteorBig: './assets/images/meteor_big.png',
+  enemyZangano: './assets/images/enemy_zangano.png',
+  enemyVespa: './assets/images/enemy_vespa.png',
+  enemyBesouro: './assets/images/enemy_besouro.png',
+  background1: './assets/images/background_1.png',
+  background2: './assets/images/background_2.png',
+  background3: './assets/images/background_3.png',
+  background4: './assets/images/background_4.png',
 };
 
 const assets: Record<string, HTMLImageElement> = {};
