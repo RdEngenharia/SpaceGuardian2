@@ -28,8 +28,12 @@
     <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-          // Ajustado para caminho relativo para funcionar no GitHub Pages
-          navigator.serviceWorker.register('./sw.js')
+          // Detecta automaticamente se estamos no GitHub Pages ou local
+          const swPath = window.location.pathname.includes('SpaceGuardian2') 
+            ? '/SpaceGuardian2/sw.js' 
+            : './sw.js';
+
+          navigator.serviceWorker.register(swPath)
             .then(reg => console.log('SW OK:', reg.scope))
             .catch(err => console.log('SW Erro:', err));
         });
