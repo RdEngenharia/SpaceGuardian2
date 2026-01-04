@@ -165,6 +165,10 @@ export default function App() {
     }
   };
 
+  const handleQuit = () => {
+    window.close();
+  };
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if(gameState !== GameState.Playing && gameState !== GameState.Paused) return;
@@ -227,7 +231,7 @@ export default function App() {
       )}
 
       {gameState === GameState.Intro && <IntroScreen onClose={() => setGameState(GameState.Start)} />}
-      {gameState === GameState.Start && <StartScreen onStart={handleStartGame} onShop={handleGoToShop} onHelp={() => setGameState(GameState.Help)} isLoading={isLoading} />}
+      {gameState === GameState.Start && <StartScreen onStart={handleStartGame} onShop={handleGoToShop} onHelp={() => setGameState(GameState.Help)} onQuit={handleQuit} isLoading={isLoading} />}
       {gameState === GameState.Shop && <ShopScreen onBack={handleBackToMenu} onBuy={handleBuyUpgrade} coins={totalCoins + gameStats.sessionCoins} upgrades={shopUpgrades} />}
       {gameState === GameState.Help && <HelpScreen onBack={() => setGameState(GameState.Start)} />}
       {gameState === GameState.Paused && <PauseScreen onResume={handlePause} onShop={handleGoToShop} onExit={handleReturnToStart} />}

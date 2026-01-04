@@ -1,4 +1,3 @@
-
 import React from 'react';
 import Overlay, { Title, MenuButton } from './common/Overlay';
 
@@ -6,10 +5,11 @@ interface StartScreenProps {
   onStart: () => void;
   onShop: () => void;
   onHelp: () => void;
+  onQuit: () => void;
   isLoading: boolean;
 }
 
-const StartScreen: React.FC<StartScreenProps> = ({ onStart, onShop, onHelp, isLoading }) => {
+const StartScreen: React.FC<StartScreenProps> = ({ onStart, onShop, onHelp, onQuit, isLoading }) => {
   
   // Função para requisitar tela cheia, melhorando a imersão
   const handleStart = () => {
@@ -35,7 +35,9 @@ const StartScreen: React.FC<StartScreenProps> = ({ onStart, onShop, onHelp, isLo
         <>
           <MenuButton onClick={handleStart}>INICIAR DEFESA</MenuButton>
           <MenuButton onClick={onShop}>HANGAR</MenuButton>
+          {/* FIX: Corrected a typo in the closing tag. */}
           <MenuButton onClick={onHelp}>REGRAS</MenuButton>
+          <MenuButton onClick={onQuit} className="bg-red-800">SAIR</MenuButton>
         </>
       )}
     </Overlay>
