@@ -4,6 +4,7 @@ import type { Star, Player, Bullet, PowerUp, Enemy, GameStats, ShopUpgrades, Pow
 import audioService from '../services/audioService';
 import assetService from '../services/assetService';
 import { PLAYER_WIDTH, PLAYER_HEIGHT, PLAYER_SPEED, BASE_FIRE_RATE, FAST_FIRE_RATE, BOSS_VICTORY_QUOTES } from '../constants';
+import VirtualJoystick from './VirtualJoystick';
 
 interface GameCanvasProps {
   isPaused: boolean;
@@ -16,22 +17,6 @@ interface GameCanvasProps {
   shopUpgrades: ShopUpgrades;
   initialShield: boolean;
 }
-
-const DPadButton: React.FC<{ onAction: (isPressed: boolean) => void, children: React.ReactNode, className?: string }> = ({ onAction, children, className }) => {
-  return (
-    <div
-      onTouchStart={() => onAction(true)}
-      onTouchEnd={() => onAction(false)}
-      onMouseDown={() => onAction(true)}
-      onMouseUp={() => onAction(false)}
-      onMouseLeave={() => onAction(false)}
-      className={`w-12 h-12 bg-gray-500/50 rounded-full flex items-center justify-center text-white text-2xl select-none active:bg-gray-400/70 ${className}`}
-    >
-      {children}
-    </div>
-  );
-};
-
 
 const GameCanvas: React.FC<GameCanvasProps> = ({ isPaused, onStatsUpdate, onGameOver, onFreezeCharge, onVictory, onAlert, onBossUpdate, shopUpgrades, initialShield }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -51,6 +36,7 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ isPaused, onStatsUpdate, onGame
   const enemiesRef = useRef<Enemy[]>([]);
   const powerupsRef = useRef<PowerUp[]>([]);
   const keysRef = useRef<Record<string, boolean>>({});
+  const joystickRef = useRef({ dx: 0, dy: 0 });
   const [isTouchDevice, setIsTouchDevice] = useState(false);
 
   useEffect(() => {
@@ -203,6 +189,9 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ isPaused, onStatsUpdate, onGame
     if (keysRef.current['ArrowRight']) player.x += player.speed;
     if (keysRef.current['ArrowUp']) player.y -= player.speed;
     if (keysRef.current['ArrowDown']) player.y += player.speed;
+
+    player.x += joystickRef.current.dx * player.speed;
+    player.y += joystickRef.current.dy * player.speed;
 
     // --- BOUNDARY CHECKS ---
     if (player.x < 0) player.x = 0;
@@ -434,20 +423,15 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ isPaused, onStatsUpdate, onGame
     };
   }, [gameLoop]);
 
-  const handleControlAction = (key: string, isPressed: boolean) => {
-    keysRef.current[key] = isPressed;
-  };
+  const handleJoystickMove = useCallback((dx: number, dy: number) => {
+    joystickRef.current = { dx, dy };
+  }, []);
 
   return (
     <>
       <canvas ref={canvasRef} className="absolute top-0 left-0 block z-10" />
       {isTouchDevice && (
-        <div className="fixed bottom-5 right-5 z-20 grid grid-cols-3 grid-rows-3 w-36 h-36">
-          <DPadButton onAction={(p) => handleControlAction('ArrowUp', p)} className="col-start-2 row-start-1">▲</DPadButton>
-          <DPadButton onAction={(p) => handleControlAction('ArrowLeft', p)} className="col-start-1 row-start-2">◀</DPadButton>
-          <DPadButton onAction={(p) => handleControlAction('ArrowRight', p)} className="col-start-3 row-start-2">▶</DPadButton>
-          <DPadButton onAction={(p) => handleControlAction('ArrowDown', p)} className="col-start-2 row-start-3">▼</DPadButton>
-        </div>
+        <VirtualJoystick onMove={handleJoystickMove} />
       )}
     </>
   );

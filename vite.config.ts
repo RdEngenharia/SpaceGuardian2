@@ -6,8 +6,9 @@ export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, '.', '');
     
     return {
-      // Ajuste crucial para GitHub Pages: usa o nome do repositório
-      base: '/SpaceGuardian2/', 
+      // Ajustado para './' para funcionar no Android (Capacitor) 
+      // e evitar a tela preta por caminhos absolutos.
+      base: './', 
       
       server: {
         port: 3000,
@@ -20,7 +21,6 @@ export default defineConfig(({ mode }) => {
       },
       resolve: {
         alias: {
-          // Ajustado para apontar para a raiz do projeto conforme sua estrutura
           '@': path.resolve(__dirname, './'),
         }
       }

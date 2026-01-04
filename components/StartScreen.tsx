@@ -1,5 +1,7 @@
 import React from 'react';
 import Overlay, { Title, MenuButton } from './common/Overlay';
+// IMPORTANTE: Importando o plugin nativo do Capacitor
+import { App } from '@capacitor/app';
 
 interface StartScreenProps {
   onStart: () => void;
@@ -11,16 +13,27 @@ interface StartScreenProps {
 
 const StartScreen: React.FC<StartScreenProps> = ({ onStart, onShop, onHelp, onQuit, isLoading }) => {
   
-  // Função para requisitar tela cheia, melhorando a imersão
+  // Função para fechar o aplicativo no Android
+  const handleQuit = async () => {
+    try {
+      // Chama o comando nativo para encerrar o processo do app
+      await App.exitApp();
+    } catch (err) {
+      // Caso falhe (como no navegador), ele tenta usar a função original
+      console.log("Falha ao sair nativamente, tentando onQuit original", err);
+      onQuit();
+    }
+  };
+
   const handleStart = () => {
     const element = document.documentElement;
     if (element.requestFullscreen) {
       element.requestFullscreen().catch(err => console.log(err));
-    } else if ((element as any).mozRequestFullScreen) { // Firefox
+    } else if ((element as any).mozRequestFullScreen) {
       (element as any).mozRequestFullScreen();
-    } else if ((element as any).webkitRequestFullscreen) { // Chrome, Safari and Opera
+    } else if ((element as any).webkitRequestFullscreen) {
       (element as any).webkitRequestFullscreen();
-    } else if ((element as any).msRequestFullscreen) { // IE/Edge
+    } else if ((element as any).msRequestFullscreen) {
       (element as any).msRequestFullscreen();
     }
     onStart();
@@ -35,9 +48,9 @@ const StartScreen: React.FC<StartScreenProps> = ({ onStart, onShop, onHelp, onQu
         <>
           <MenuButton onClick={handleStart}>INICIAR DEFESA</MenuButton>
           <MenuButton onClick={onShop}>HANGAR</MenuButton>
-          {/* FIX: Corrected a typo in the closing tag. */}
           <MenuButton onClick={onHelp}>REGRAS</MenuButton>
-          <MenuButton onClick={onQuit} className="bg-red-800">SAIR</MenuButton>
+          {/* Alterado para chamar a nova função handleQuit */}
+          <MenuButton onClick={handleQuit} className="bg-red-800">SAIR</MenuButton>
         </>
       )}
     </Overlay>
