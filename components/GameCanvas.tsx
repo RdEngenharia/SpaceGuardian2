@@ -1,5 +1,5 @@
 
-import React, { useRef, useEffect, useCallback } from 'react';
+import React, { useRef, useEffect, useCallback, useState } from 'react';
 import type { Star, Player, Bullet, PowerUp, Enemy, GameStats, ShopUpgrades, PowerUpType, EnemyType, EnemyBullet } from '../types';
 import audioService from '../services/audioService';
 import assetService from '../services/assetService';
@@ -16,6 +16,22 @@ interface GameCanvasProps {
   shopUpgrades: ShopUpgrades;
   initialShield: boolean;
 }
+
+const DPadButton: React.FC<{ onAction: (isPressed: boolean) => void, children: React.ReactNode, className?: string }> = ({ onAction, children, className }) => {
+  return (
+    <div
+      onTouchStart={() => onAction(true)}
+      onTouchEnd={() => onAction(false)}
+      onMouseDown={() => onAction(true)}
+      onMouseUp={() => onAction(false)}
+      onMouseLeave={() => onAction(false)}
+      className={`w-12 h-12 bg-gray-500/50 rounded-full flex items-center justify-center text-white text-2xl select-none active:bg-gray-400/70 ${className}`}
+    >
+      {children}
+    </div>
+  );
+};
+
 
 const GameCanvas: React.FC<GameCanvasProps> = ({ isPaused, onStatsUpdate, onGameOver, onFreezeCharge, onVictory, onAlert, onBossUpdate, shopUpgrades, initialShield }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -35,7 +51,11 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ isPaused, onStatsUpdate, onGame
   const enemiesRef = useRef<Enemy[]>([]);
   const powerupsRef = useRef<PowerUp[]>([]);
   const keysRef = useRef<Record<string, boolean>>({});
-  const touchPosRef = useRef<{ x: number | null, y: number | null }>({ x: null, y: null });
+  const [isTouchDevice, setIsTouchDevice] = useState(false);
+
+  useEffect(() => {
+    setIsTouchDevice('ontouchstart' in window || navigator.maxTouchPoints > 0);
+  }, []);
 
   const frameCount = useRef(0);
   const shakeAmount = useRef(0);
@@ -179,24 +199,16 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ isPaused, onStatsUpdate, onGame
     if (cloneTimer.current > 0) cloneTimer.current--;
 
     // --- PLAYER MOVEMENT LOGIC ---
-    if (touchPosRef.current.x !== null && touchPosRef.current.y !== null) {
-      // Touch movement takes priority
-      player.x = touchPosRef.current.x - player.w / 2;
-      player.y = touchPosRef.current.y - player.h / 2;
-    } else {
-      // Fallback to keyboard movement
-      if (keysRef.current['ArrowLeft']) player.x -= player.speed;
-      if (keysRef.current['ArrowRight']) player.x += player.speed;
-      if (keysRef.current['ArrowUp']) player.y -= player.speed;
-      if (keysRef.current['ArrowDown']) player.y += player.speed;
-    }
+    if (keysRef.current['ArrowLeft']) player.x -= player.speed;
+    if (keysRef.current['ArrowRight']) player.x += player.speed;
+    if (keysRef.current['ArrowUp']) player.y -= player.speed;
+    if (keysRef.current['ArrowDown']) player.y += player.speed;
 
-    // --- BOUNDARY CHECKS (APPLY TO BOTH INPUTS) ---
+    // --- BOUNDARY CHECKS ---
     if (player.x < 0) player.x = 0;
     if (player.x > canvas.width - player.w) player.x = canvas.width - player.w;
     if (player.y < 0) player.y = 0;
     if (player.y > canvas.height - player.h) player.y = canvas.height - player.h;
-
 
     if (player.fireTimer <= 0) {
       const currentGunMode = player.gunMode;
@@ -404,29 +416,11 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ isPaused, onStatsUpdate, onGame
     const handleKeyDown = (e: KeyboardEvent) => { keysRef.current[e.code] = true; };
     const handleKeyUp = (e: KeyboardEvent) => { keysRef.current[e.code] = false; };
     
-    const handleTouchStart = (e: TouchEvent) => {
-        if (e.touches[0]) {
-            touchPosRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-        }
-    };
-    const handleTouchMove = (e: TouchEvent) => {
-        if (e.touches[0]) {
-          touchPosRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-        }
-        e.preventDefault(); // Evita que a página role
-    };
-    const handleTouchEnd = () => {
-        touchPosRef.current = { x: null, y: null };
-    };
-
     const handleFreeze = () => { freezeTimer.current = 240; audioService.play(200, 0.5, 'sine'); };
     
     window.addEventListener('resize', resizeCanvas);
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('keyup', handleKeyUp);
-    canvas.addEventListener('touchstart', handleTouchStart, { passive: true });
-    canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
-    canvas.addEventListener('touchend', handleTouchEnd);
     window.addEventListener('activateFreeze', handleFreeze);
 
     gameLoopId.current = requestAnimationFrame(gameLoop);
@@ -436,14 +430,27 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ isPaused, onStatsUpdate, onGame
       window.removeEventListener('resize', resizeCanvas);
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
-      canvas.removeEventListener('touchstart', handleTouchStart);
-      canvas.removeEventListener('touchmove', handleTouchMove);
-      canvas.removeEventListener('touchend', handleTouchEnd);
       window.removeEventListener('activateFreeze', handleFreeze);
     };
   }, [gameLoop]);
 
-  return <canvas ref={canvasRef} className="absolute top-0 left-0 block z-10" />;
+  const handleControlAction = (key: string, isPressed: boolean) => {
+    keysRef.current[key] = isPressed;
+  };
+
+  return (
+    <>
+      <canvas ref={canvasRef} className="absolute top-0 left-0 block z-10" />
+      {isTouchDevice && (
+        <div className="fixed bottom-5 right-5 z-20 grid grid-cols-3 grid-rows-3 w-36 h-36">
+          <DPadButton onAction={(p) => handleControlAction('ArrowUp', p)} className="col-start-2 row-start-1">▲</DPadButton>
+          <DPadButton onAction={(p) => handleControlAction('ArrowLeft', p)} className="col-start-1 row-start-2">◀</DPadButton>
+          <DPadButton onAction={(p) => handleControlAction('ArrowRight', p)} className="col-start-3 row-start-2">▶</DPadButton>
+          <DPadButton onAction={(p) => handleControlAction('ArrowDown', p)} className="col-start-2 row-start-3">▼</DPadButton>
+        </div>
+      )}
+    </>
+  );
 };
 
 export default GameCanvas;
