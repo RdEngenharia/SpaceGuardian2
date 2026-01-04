@@ -35,6 +35,7 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ isPaused, onStatsUpdate, onGame
   const enemiesRef = useRef<Enemy[]>([]);
   const powerupsRef = useRef<PowerUp[]>([]);
   const keysRef = useRef<Record<string, boolean>>({});
+  const touchPosRef = useRef<{ x: number | null, y: number | null }>({ x: null, y: null });
 
   const frameCount = useRef(0);
   const shakeAmount = useRef(0);
@@ -177,10 +178,25 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ isPaused, onStatsUpdate, onGame
     if (victoryFlash.current > 0) victoryFlash.current--;
     if (cloneTimer.current > 0) cloneTimer.current--;
 
-    if (keysRef.current['ArrowLeft'] && player.x > 0) player.x -= player.speed;
-    if (keysRef.current['ArrowRight'] && player.x < canvas.width - player.w) player.x += player.speed;
-    if (keysRef.current['ArrowUp'] && player.y > 0) player.y -= player.speed;
-    if (keysRef.current['ArrowDown'] && player.y < canvas.height - player.h) player.y += player.speed;
+    // --- PLAYER MOVEMENT LOGIC ---
+    if (touchPosRef.current.x !== null && touchPosRef.current.y !== null) {
+      // Touch movement takes priority
+      player.x = touchPosRef.current.x - player.w / 2;
+      player.y = touchPosRef.current.y - player.h / 2;
+    } else {
+      // Fallback to keyboard movement
+      if (keysRef.current['ArrowLeft']) player.x -= player.speed;
+      if (keysRef.current['ArrowRight']) player.x += player.speed;
+      if (keysRef.current['ArrowUp']) player.y -= player.speed;
+      if (keysRef.current['ArrowDown']) player.y += player.speed;
+    }
+
+    // --- BOUNDARY CHECKS (APPLY TO BOTH INPUTS) ---
+    if (player.x < 0) player.x = 0;
+    if (player.x > canvas.width - player.w) player.x = canvas.width - player.w;
+    if (player.y < 0) player.y = 0;
+    if (player.y > canvas.height - player.h) player.y = canvas.height - player.h;
+
 
     if (player.fireTimer <= 0) {
       const currentGunMode = player.gunMode;
@@ -387,26 +403,42 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ isPaused, onStatsUpdate, onGame
     resizeCanvas();
     const handleKeyDown = (e: KeyboardEvent) => { keysRef.current[e.code] = true; };
     const handleKeyUp = (e: KeyboardEvent) => { keysRef.current[e.code] = false; };
+    
+    const handleTouchStart = (e: TouchEvent) => {
+        if (e.touches[0]) {
+            touchPosRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+        }
+    };
     const handleTouchMove = (e: TouchEvent) => {
         if (e.touches[0]) {
-          playerRef.current.x = e.touches[0].clientX - playerRef.current.w / 2;
-          playerRef.current.y = e.touches[0].clientY - playerRef.current.h / 2;
+          touchPosRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
         }
-        e.preventDefault();
+        e.preventDefault(); // Evita que a página role
     };
+    const handleTouchEnd = () => {
+        touchPosRef.current = { x: null, y: null };
+    };
+
     const handleFreeze = () => { freezeTimer.current = 240; audioService.play(200, 0.5, 'sine'); };
+    
     window.addEventListener('resize', resizeCanvas);
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('keyup', handleKeyUp);
+    canvas.addEventListener('touchstart', handleTouchStart, { passive: true });
     canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
+    canvas.addEventListener('touchend', handleTouchEnd);
     window.addEventListener('activateFreeze', handleFreeze);
+
     gameLoopId.current = requestAnimationFrame(gameLoop);
+
     return () => {
       if (gameLoopId.current) cancelAnimationFrame(gameLoopId.current);
       window.removeEventListener('resize', resizeCanvas);
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
+      canvas.removeEventListener('touchstart', handleTouchStart);
       canvas.removeEventListener('touchmove', handleTouchMove);
+      canvas.removeEventListener('touchend', handleTouchEnd);
       window.removeEventListener('activateFreeze', handleFreeze);
     };
   }, [gameLoop]);
