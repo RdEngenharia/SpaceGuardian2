@@ -1,6 +1,6 @@
 
-export const PLAYER_WIDTH = 45;
-export const PLAYER_HEIGHT = 50;
+export const PLAYER_WIDTH = 90;
+export const PLAYER_HEIGHT = 100;
 export const PLAYER_SPEED = 7;
 export const BASE_FIRE_RATE = 14;
 export const FAST_FIRE_RATE = 9;

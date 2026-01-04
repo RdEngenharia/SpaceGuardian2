@@ -187,9 +187,9 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ isPaused, onStatsUpdate, onGame
       const fireDamage = cloneTimer.current > 0 ? player.damage * 2 : player.damage;
       const fire = (offsetX: number) => bulletsRef.current.push({ x: player.x + player.w/2 + offsetX, y: player.y, damage: fireDamage });
       if (currentGunMode === 1) fire(0);
-      else if (currentGunMode === 2) { fire(-15); fire(15); }
-      else if (currentGunMode === 3) { fire(-20); fire(0); fire(20); }
-      else if (currentGunMode >= 4) { fire(-30); fire(-10); fire(10); fire(30); }
+      else if (currentGunMode === 2) { fire(-25); fire(25); }
+      else if (currentGunMode === 3) { fire(-30); fire(0); fire(30); }
+      else if (currentGunMode >= 4) { fire(-40); fire(-15); fire(15); fire(40); }
       player.fireTimer = player.fireRate;
       audioService.play(400, 0.1);
     }
