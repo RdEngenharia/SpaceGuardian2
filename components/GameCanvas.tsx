@@ -261,7 +261,8 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ isPaused, onStatsUpdate, onGame
         }
 
         bulletsRef.current = bulletsRef.current.filter(b => {
-            if (b.x > e.x && b.x < e.x + e.size && b.y > e.y && b.y < e.y + e.size) {
+            // SÓ REGISTRA COLISÃO SE O INIMIGO ESTIVER DENTRO DA TELA
+            if (e.y > 0 && b.x > e.x && b.x < e.x + e.size && b.y > e.y && b.y < e.y + e.size) {
                 e.hp -= b.damage;
                 if (e.isBoss) onBossUpdate({current: e.hp, max: e.maxHp});
                 
